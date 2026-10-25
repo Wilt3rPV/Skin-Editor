@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A Minecraft Skin Editor by ClaudeAI</title>
+<style>
+  :root {
+    --bg: #f3f2ef;
+    --panel: #fff;
+    --ink: #1d1d1b;
+    --mute: #6b6a64;
+    --line: #dcdad3;
+    --acc: #3b7d3a;
+    --accink: #fff;
+    --view: #e6e9ee;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+    --t: .28s;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16171a;
+      --panel: #212328;
+      --ink: #ecebe7;
+      --mute: #9a9992;
+      --line: #34363c;
+      --acc: #6fbf6c;
+      --accink: #10210f;
+      --view: #2a2d34;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #16171a;
+    --panel: #212328;
+    --ink: #ecebe7;
+    --mute: #9a9992;
+    --line: #34363c;
+    --acc: #6fbf6c;
+    --accink: #10210f;
+    --view: #2a2d34;
+  }
+
+  :root {
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-size: 16px;
+    margin: 0;
+    letter-spacing: .2px;
+  }
+
+  header .sp {
+    flex: 1;
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: 230px minmax(280px, 1fr) 300px;
+    gap: 10px;
+    padding: 10px;
+    height: calc(100vh - 56px);
+    min-height: 520px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    overflow: auto;
+  }
+
+  h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--mute);
+    margin: 12px 0 6px;
+  }
+
+  h2:first-child {
+    margin-top: 0;
+  }
+
+  button, select, input[type=text] {
+    font: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 5px 9px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: var(--acc);
+  }
+
+  button.on {
+    background: var(--acc);
+    color: var(--accink);
+    border-color: var(--acc);
+  }
+
+  .tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: 6px 0;
+    flex-wrap: wrap;
+  }
+
+  .row label {
+    color: var(--mute);
+    font-size: 12px;
+  }
+
+  input[type=color] {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: none;
+  }
+
+  input[type=range] {
+    flex: 1;
+    min-width: 80px;
+    accent-color: var(--acc);
+  }
+
+  #view {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 35%, var(--view), var(--bg));
+    border: 1px solid var(--line);
+    touch-action: none;
+    min-height: 300px;
+  }
+
+  #view canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  #hint {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    font-size: 12px;
+    color: var(--mute);
+    pointer-events: none;
+  }
+
+  #flatwrap {
+    background-image: conic-gradient(#8884 25%, #0000 0 50%, #8884 0 75%, #0000 0);
+    background-size: 16px 16px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    line-height: 0;
+  }
+
+  #flat {
+    width: 100%;
+    image-rendering: pixelated;
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  .layer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    margin-bottom: 4px;
+    cursor: pointer;
+  }
+
+  .layer.sel {
+    border-color: var(--acc);
+    box-shadow: 0 0 0 1px var(--acc);
+  }
+
+  #layers {
+    position: relative;
+  }
+
+  .layer .grip {
+    color: var(--mute);
+    cursor: grab;
+    touch-action: none;
+    font-size: 13px;
+    letter-spacing: -3px;
+    padding: 0 4px 0 0;
+    user-select: none;
+    flex: none;
+  }
+
+  .layer.dragging {
+    opacity: .45;
+  }
+
+  .dropline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--acc);
+    pointer-events: none;
+  }
+
+  .layer canvas {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    background-image: conic-gradient(#8885 25%, #0000 0 50%, #8885 0 75%, #0000 0);
+    background-size: 8px 8px;
+    image-rendering: pixelated;
+    flex: none;
+  }
+
+  .layer input[type=text] {
+    flex: 1;
+    min-width: 0;
+    padding: 3px 6px;
+  }
+
+  .layer input[type=checkbox] {
+    accent-color: var(--acc);
+  }
+
+  .btns {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .btns button {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .seg {
+    display: flex;
+  }
+
+  .seg button {
+    border-radius: 0;
+  }
+
+  .seg button:first-child {
+    border-radius: 7px 0 0 7px;
+  }
+
+  .seg button:last-child {
+    border-radius: 0 7px 7px 0;
+    margin-left: -1px;
+  }
+
+  .parts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+  }
+
+  .parts label {
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .parts input {
+    accent-color: var(--acc);
+  }
+
+  #modal {
+    position: fixed;
+    inset: 0;
+    background: #000a;
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    backdrop-filter: blur(0px);
+    transition: opacity .28s var(--ease), visibility 0s linear .28s, backdrop-filter .28s ease;
+    align-items: center;
+    justify-content: center;
+    z-index: 9;
+  }
+
+  #modal.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    backdrop-filter: blur(4px);
+    transition: opacity .28s var(--ease), visibility 0s, backdrop-filter .28s ease;
+  }
+
+  #modal div {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 16px;
+    max-width: 340px;
+    text-align: center;
+    transform: translateY(24px) scale(.8);
+    transition: transform .25s ease, background-color var(--t) ease;
+  }
+
+  #modal.show div {
+    transform: none;
+    transition: transform .55s cubic-bezier(.34, 1.56, .64, 1), background-color var(--t) ease;
+  }
+
+  #modal img {
+    width: 256px;
+    height: 256px;
+    image-rendering: pixelated;
+    border: 1px solid var(--line);
+    background: var(--view);
+  }
+
+  @media (max-width: 900px) {
+    main {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+    #view {
+      height: 420px;
+    }
+  }
+
+  /* ---------- motion ---------- */
+  @property --vw { syntax: '<color>'; inherits: false; initial-value: #e6e9ee; }
+  @property --vb { syntax: '<color>'; inherits: false; initial-value: #f3f2ef; }
+
+  /* viewport gradient can't transition directly, so its two stops are animated colours */
+  #view {
+    --vw: var(--view);
+    --vb: var(--bg);
+    background: radial-gradient(ellipse at 50% 35%, var(--vw), var(--vb));
+  }
+
+  .ready #view {
+    transition: --vw var(--t) ease, --vb var(--t) ease, border-color var(--t) ease;
+  }
+
+  /* theme switch + hover/selection feedback (enabled after first paint so nothing animates on load) */
+  .ready :where(body, header, .panel, input, select, button, .layer, #flatwrap) {
+    transition: background-color var(--t) ease, border-color var(--t) ease, color var(--t) ease,
+                box-shadow var(--t) ease, opacity .2s ease, transform .18s var(--ease);
+  }
+
+  button:hover { transform: translateY(-2px) scale(1.04); }
+  button:active { transform: scale(.97); }
+  .ready button { transition: background-color var(--t) ease, border-color var(--t) ease, color var(--t) ease, transform .4s var(--ease); }
+  .ready button:active { transition-duration: .12s; }
+  #sw button:hover { transform: translateY(-2px) scale(1.12); }
+  #sw button:active { transform: scale(.92); }
+  .layer:not(.sel):hover { border-color: color-mix(in srgb, var(--acc) 45%, var(--line)); }
+  .layer.dragging { transform: scale(.985); }
+
+  .dropline {
+    transition: top .12s var(--ease);
+    animation: fadein .15s ease;
+  }
+
+  @keyframes fadein { from { opacity: 0; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+
+  /* one orchestrated entrance on load */
+  @media (prefers-reduced-motion: no-preference) {
+    header { animation: rise .5s var(--ease) backwards; }
+    main > * { animation: rise .7s var(--ease) backwards; }
+    main > :nth-child(2) { animation-delay: .06s; }
+    main > :nth-child(3) { animation-delay: .12s; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-delay: 0s !important;
+      transition-duration: .01ms !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* ---------- custom colour picker ---------- */
+  .cswatch { width: 44px; height: 32px; padding: 0; border-radius: 6px; }
+  .ready #cbtn { transition: transform .25s var(--ease), box-shadow var(--t) ease, border-color var(--t) ease; }
+
+  #cpop {
+    position: fixed;
+    z-index: 8;
+    width: 224px;
+    padding: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px #0004;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(.82) translateY(-8px);
+    transition: transform .2s ease, opacity .18s ease, visibility 0s linear .2s;
+  }
+
+  #cpop.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: transform .5s cubic-bezier(.34, 1.56, .64, 1), opacity .2s ease, visibility 0s;
+  }
+
+  #csvwrap { position: relative; border-radius: 8px; overflow: hidden; touch-action: none; cursor: crosshair; line-height: 0; }
+  #csv { display: block; width: 100%; height: 140px; }
+  #cdot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #0007, inset 0 0 0 1px #0005; pointer-events: none; }
+  #chue { -webkit-appearance: none; appearance: none; width: 100%; min-width: 0; height: 12px; margin: 12px 0 10px; border-radius: 6px; background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  #chue::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #0006; cursor: pointer; transition: transform .2s var(--ease); }
+  #chue::-webkit-slider-thumb:hover { transform: scale(1.18); }
+  #chue::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 2px solid #0006; cursor: pointer; }
+  .crow { display: flex; gap: 8px; align-items: center; }
+  #cprev { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line); flex: none; }
+  #chex { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, Consolas, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Wilt3r's Skin Editor</h1>
+  <span class="sp"></span>
+  <div class="seg" title="Colour theme"><button id="tl">Light</button><button id="td">Dark</button></div>
+  <button id="undo">Undo</button>
+  <button id="redo">Redo</button>
+  <button id="imp">Import PNG</button>
+  <button id="exp">Export PNG</button>
+  <input type="file" id="file" accept="image/png" hidden>
+</header>
+<main>
+  <section class="panel">
+    <h2>Tools</h2>
+    <div class="tools" id="tools">
+      <button data-t="pencil" class="on">Pencil</button>
+      <button data-t="erase">Eraser</button>
+      <button data-t="fill">Fill</button>
+      <button data-t="pick">Picker</button>
+    </div>
+    <h2>Colour</h2>
+    <div class="row"><button id="cbtn" class="cswatch" title="Pick colour"></button><input type="color" id="color" value="#d23c3c" hidden><span id="hex" style="color:var(--mute)">#d23c3c</span></div>
+    <div class="row" id="sw"></div>
+    <h2>Brush</h2>
+    <div class="row"><label>Size</label><input type="range" id="size" min="1" max="4" value="1"><span id="sizev">1</span></div>
+    <h2>Model</h2>
+    <div class="tools" id="models"><button data-m="default" class="on">Default</button><button data-m="slim">Slim</button></div>
+    <h2>Body parts</h2>
+    <div class="parts" id="parts">
+      <label><input type="checkbox" data-p="head" checked> Head</label>
+      <label><input type="checkbox" data-p="body" checked> Body</label>
+      <label><input type="checkbox" data-p="rarm" checked> Right arm</label>
+      <label><input type="checkbox" data-p="larm" checked> Left arm</label>
+      <label><input type="checkbox" data-p="rleg" checked> Right leg</label>
+      <label><input type="checkbox" data-p="lleg" checked> Left leg</label>
+    </div>
+    <h2>View</h2>
+    <div class="row"><label><input type="checkbox" id="shell" checked> Outer shell (hat, jacket, sleeves)</label></div>
+    <div class="row"><label><input type="checkbox" id="hgrid" checked> Pixel grid on hover</label></div>
+    <div class="row"><label><input type="checkbox" id="auto"> Auto-rotate</label></div>
+    <div class="row"><label><input type="checkbox" id="grid" checked> Pixel grid on flat map</label></div>
+    <div class="row"><button id="reset">Reset camera</button></div>
+  </section>
+
+  <section id="view"><div id="hint">Paint on the model · right-drag or drag the background to orbit · middle-drag to pan · wheel to zoom</div></section>
+
+  <section class="panel">
+    <h2>Layers</h2>
+    <div id="layers"></div>
+    <div class="row"><label>Opacity</label><input type="range" id="op" min="0" max="100" value="100"><span id="opv">100</span></div>
+    <div class="btns">
+      <button id="ladd">+ New</button><button id="ldup">Duplicate</button><button id="ldel">Delete</button>
+      <button id="lup">Up</button><button id="ldn">Down</button><button id="lmerge">Merge down</button>
+    </div>
+    <h2>Flat texture (64×64)</h2>
+    <div id="flatwrap"><canvas id="flat" width="512" height="512"></canvas></div>
+  </section>
+</main>
+<div id="cpop" role="dialog" aria-label="Colour picker">
+  <div id="csvwrap"><canvas id="csv" width="200" height="140"></canvas><div id="cdot"></div></div>
+  <input type="range" id="chue" min="0" max="360" value="0" aria-label="Hue">
+  <div class="crow"><span id="cprev"></span><input type="text" id="chex" maxlength="7" spellcheck="false" aria-label="Hex colour"></div>
+</div>
+<div id="modal"><div>
+  <p><b>Your skin</b><br><span style="color:var(--mute)">Right-click or long-press the image and choose Save image.</span></p>
+  <img id="out" alt="Exported skin"><p><button id="close">Close</button></p>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  (function () {
+    const S = 64;
+    const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const EASE = 'cubic-bezier(.22,1,.36,1)';
+    let lastCount = 0;
+    const $ = id => document.getElementById(id);
+    const mk = () => { const c = document.createElement('canvas'); c.width = c.height = S; return c; };
+
+    /* ---------- layers + composite ---------- */
+    const comp = mk(), cctx = comp.getContext('2d');
+    const layers = [];
+    let active = 0, tool = 'pencil', undoStack = [];
+    function addLayer(name, canvas) {
+      const c = canvas || mk();
+      layers.push({ name, canvas: c, ctx: c.getContext('2d'), visible: true, opacity: 1 });
+      return layers[layers.length - 1];
+    }
+    function seed(c) {
+      const R = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+      const skin = '#c8946a', hair = '#4a3020', shirt = '#2f9fb5', pants = '#3b49a0', shoe = '#555';
+      R(8, 0, 16, 8, skin);
+      R(0, 8, 32, 8, skin);
+      R(8, 0, 8, 8, hair);
+      R(0, 8, 32, 3, hair);
+      R(24, 8, 8, 8, hair);
+      R(8, 8, 8, 2, hair);
+      R(9, 12, 2, 1, '#fff');
+      R(10, 12, 1, 1, '#33a');
+      R(13, 12, 2, 1, '#fff');
+      R(13, 12, 1, 1, '#33a');
+      R(11, 14, 2, 1, '#8a4a3a');
+      R(20, 16, 16, 4, shirt);
+      R(16, 20, 24, 12, shirt);
+      R(44, 16, 8, 4, skin);
+      R(40, 20, 16, 12, skin);
+      R(40, 20, 16, 4, shirt);
+      R(36, 48, 8, 4, skin);
+      R(32, 52, 16, 12, skin);
+      R(32, 52, 16, 4, shirt);
+      R(4, 16, 8, 4, pants);
+      R(0, 20, 16, 12, pants);
+      R(0, 29, 16, 3, shoe);
+      R(20, 48, 8, 4, pants);
+      R(16, 52, 16, 12, pants);
+      R(16, 61, 16, 3, shoe);
+    }
+    function composite() {
+      cctx.clearRect(0, 0, S, S);
+      for (const l of layers) {
+        if (!l.visible)
+          continue;
+        cctx.globalAlpha = l.opacity;
+        cctx.drawImage(l.canvas, 0, 0);
+      }
+      cctx.globalAlpha = 1;
+      tex.needsUpdate = true;
+      drawFlat();
+    }
+
+    /* ---------- three.js ---------- */
+    const view = $('view');
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    view.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(35, 1, 1, 500);
+    const tex = new THREE.CanvasTexture(comp);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.generateMipmaps = false;
+    const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, alphaTest: 0.01 });
+    function box(w, h, d, u, v, grow) {
+      const g = new THREE.BoxGeometry(w + grow, h + grow, d + grow);
+      const f = [[u + d + w, v + d, d, h], [u, v + d, d, h], [u + d, v, w, d], [u + d + w, v, w, d], [u + d, v + d, w, h], [u + 2 * d + w, v + d, w, h]];
+      const uv = g.attributes.uv;
+      f.forEach((r, i) => {
+        const u0 = r[0] / S, u1 = (r[0] + r[2]) / S, vt = 1 - r[1] / S, vb = 1 - (r[1] + r[3]) / S, o = i * 4;
+        const a = i === 3 ? vb : vt, c = i === 3 ? vt : vb; /* bottom faces are vertically flipped in the skin format */
+        uv.setXY(o, u0, a);
+        uv.setXY(o + 1, u1, a);
+        uv.setXY(o + 2, u0, c);
+        uv.setXY(o + 3, u1, c);
+      });
+      return g;
+    }
+    // name, width, height, depth, base uv (u,v), outer uv (u,v), x, y
+    const PARTS = [
+      ['head', 8, 8, 8, 0, 0, 32, 0, 0, 28], ['body', 8, 12, 4, 16, 16, 16, 32, 0, 18],
+      ['rarm', 4, 12, 4, 40, 16, 40, 32, -6, 18], ['larm', 4, 12, 4, 32, 48, 48, 48, 6, 18],
+      ['rleg', 4, 12, 4, 0, 16, 0, 32, -2, 6], ['lleg', 4, 12, 4, 16, 48, 0, 48, 2, 6]
+    ];
+    const gridMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      extensions: { derivatives: true },
+      uniforms: { uHover: { value: new THREE.Vector2(-1, -1) } },
+      vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position+normal*0.035,1.0);}',
+      fragmentShader: [
+        'varying vec2 vUv;uniform vec2 uHover;',
+        'void main(){',
+        ' vec2 t=vec2(vUv.x*64.0,(1.0-vUv.y)*64.0);',
+        ' vec2 w=max(fwidth(t),vec2(0.0001));',
+        ' vec2 f=fract(t);vec2 d=min(f,1.0-f);',
+        ' vec2 core=1.0-smoothstep(w*0.45,w*0.95,d);',
+        ' vec2 halo=1.0-smoothstep(w*0.95,w*1.9,d);',
+        ' float c=max(core.x,core.y);float h=max(halo.x,halo.y);',
+        ' float fade=1.0-smoothstep(0.3,0.6,max(w.x,w.y));',
+        ' vec2 ft=floor(t+0.001);',
+        ' float hv=(abs(ft.x-uHover.x)<0.5&&abs(ft.y-uHover.y)<0.5)?1.0:0.0;',
+        ' vec3 col=mix(vec3(1.0),vec3(0.0),c);',
+        ' float a=max(h*0.3,c*0.7)*fade;',
+        ' col=mix(col,vec3(1.0),hv*(1.0-c));',
+        ' a=max(a,hv*0.5);',
+        ' if(a<0.01) discard;',
+        ' gl_FragColor=vec4(col,a);}'
+      ].join('\n')
+    });
+    const model = new THREE.Group();
+    scene.add(model);
+    const meshes = [], shellMeshes = [], arms = [], parts = [];
+    for (const p of PARTS) {
+      const [n, w, h, d, bu, bv, ou, ov, x, y] = p;
+      const a = new THREE.Mesh(box(w, h, d, bu, bv, 0), mat);
+      a.position.set(x, y, 0);
+      model.add(a);
+      meshes.push(a);
+      const b = new THREE.Mesh(box(w, h, d, ou, ov, 1), mat);
+      b.position.set(x, y, 0);
+      model.add(b);
+      meshes.push(b);
+      shellMeshes.push(b);
+      const rec = { n, a, b, bu, bv, ou, ov, show: true };
+      parts.push(rec);
+      if (n === 'rarm' || n === 'larm')
+        arms.push(rec);
+      for (const m of [a, b]) {
+        const g = new THREE.Mesh(m.geometry, gridMat);
+        g.renderOrder = 10; /* draw after every skin mesh so draw order never hides or bleeds the grid */
+        g.visible = false;
+        m.add(g);
+        m.userData.g = g;
+      }
+    }
+    let slimOn = false;
+    function regionAt(x, y) {
+      const aw = slimOn ? 3 : 4, R = [[0, 0, 32, 16], [32, 0, 32, 16], [16, 16, 24, 16], [16, 32, 24, 16], [40, 16, 2 * aw + 8, 16], [40, 32, 2 * aw + 8, 16], [32, 48, 2 * aw + 8, 16], [48, 48, 2 * aw + 8, 16], [0, 16, 16, 16], [0, 32, 16, 16], [16, 48, 16, 16], [0, 48, 16, 16]];
+      for (const r of R)
+        if (x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3])
+          return r;
+      return [0, 0, S, S];
+    }
+    function setModel(slim) {
+      slimOn = slim;
+      const w = slim ? 3 : 4;
+      for (const r of arms) {
+        r.a.geometry.dispose();
+        r.b.geometry.dispose();
+        r.a.geometry = box(w, 12, 4, r.bu, r.bv, 0);
+        r.b.geometry = box(w, 12, 4, r.ou, r.ov, 1);
+        r.a.userData.g.geometry = r.a.geometry;
+        r.b.userData.g.geometry = r.b.geometry;
+        const x = (r.n === 'rarm' ? -1 : 1) * (4 + w / 2);
+        r.a.position.x = x;
+        r.b.position.x = x;
+      }
+    }
+    const grid = new THREE.GridHelper(40, 10, 0x888888, 0x888888);
+    grid.material.transparent = true;
+    grid.material.opacity = .25;
+    scene.add(grid);
+    (function () {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      const gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+      gr.addColorStop(0, 'rgba(0,0,0,.5)');
+      gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr;
+      g.fillRect(0, 0, 128, 128);
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+      m.rotation.x = -Math.PI / 2;
+      m.position.y = .05;
+      scene.add(m);
+    })();
+    scene.add(cam);
+    let theta = .55, phi = 1.3, rad = 78, auto = false, busy = false;
+    let radT = rad, autoV = 0, tween = null, lastT = performance.now();
+    const tgt = new THREE.Vector3(0, 16, 0);
+    function placeCam() {
+      cam.position.set(tgt.x + rad * Math.sin(phi) * Math.sin(theta), tgt.y + rad * Math.cos(phi), tgt.z + rad * Math.sin(phi) * Math.cos(theta));
+      cam.lookAt(tgt);
+      cam.updateMatrixWorld();
+    }
+    function resize() {
+      const w = view.clientWidth, h = view.clientHeight;
+      if (!w || !h)
+        return;
+      renderer.setSize(w, h, false);
+      renderer.domElement.style.width = w + 'px';
+      renderer.domElement.style.height = h + 'px';
+      cam.aspect = w / h;
+      cam.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(view);
+    const HOME = new THREE.Vector3(0, 16, 0);
+    (function loop(t) {
+      const now = t || performance.now(), dt = Math.max(0, Math.min(.05, (now - lastT) / 1000));
+      lastT = now;
+      autoV += ((auto && !busy ? .006 : 0) - autoV) * (RM ? 1 : 1 - Math.pow(.05, dt));
+      if (Math.abs(autoV) < 1e-5) autoV = 0;
+      theta += autoV;
+      if (tween) {
+        const k = Math.min(1, (now - tween.t0) / tween.d), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        theta = tween.th0 + tween.dth * e;
+        phi = tween.ph0 + (1.3 - tween.ph0) * e;
+        rad = tween.r0 + (78 - tween.r0) * e;
+        tgt.lerpVectors(tween.tg0, HOME, e);
+        if (k === 1) tween = null;
+      }
+      else rad += (radT - rad) * (RM ? 1 : 1 - Math.pow(.0005, dt));
+      placeCam(); renderer.render(scene, cam); requestAnimationFrame(loop);
+    })();
+
+    /* ---------- painting ---------- */
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    function pickPx(e) {
+      const r = renderer.domElement.getBoundingClientRect();
+      ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, cam);
+      const hit = ray.intersectObjects(meshes.filter(m => m.visible), false)[0];
+      if (!hit || !hit.uv)
+        return null;
+      return { x: Math.min(S - 1, Math.floor(hit.uv.x * S)), y: Math.min(S - 1, Math.floor((1 - hit.uv.y) * S)), m: hit.object };
+    }
+    function hexRGBA(h) { return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16), 255]; }
+    let redoStack = [];
+    function snap() { return { active, layers: layers.map(l => ({ name: l.name, visible: l.visible, opacity: l.opacity, data: l.ctx.getImageData(0, 0, S, S) })) }; }
+    function restore(s) {
+      layers.length = 0;
+      for (const d of s.layers) {
+        const l = addLayer(d.name);
+        l.ctx.putImageData(d.data, 0, 0);
+        l.visible = d.visible;
+        l.opacity = d.opacity;
+      }
+      active = Math.min(s.active, layers.length - 1);
+      composite();
+      syncOp();
+      renderLayers();
+    }
+    function undo() { const s = undoStack.pop(); if (!s)
+      return; redoStack.push(snap()); restore(s); }
+    function redo() { const s = redoStack.pop(); if (!s)
+      return; undoStack.push(snap()); restore(s); }
+    function pushUndo() {
+      undoStack.push(snap());
+      if (undoStack.length > 50)
+        undoStack.shift();
+      redoStack.length = 0;
+    }
+    function dot(x, y) {
+      const l = layers[active], s = +$('size').value, o = Math.floor(s / 2);
+      if (tool === 'erase')
+        l.ctx.clearRect(x - o, y - o, s, s);
+      else {
+        l.ctx.fillStyle = $('color').value;
+        l.ctx.fillRect(x - o, y - o, s, s);
+      }
+    }
+    function line(x0, y0, x1, y1) {
+      const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+      let er = dx + dy;
+      for (;;) {
+        dot(x0, y0);
+        if (x0 === x1 && y0 === y1)
+          break;
+        const e2 = 2 * er;
+        if (e2 >= dy) {
+          er += dy;
+          x0 += sx;
+        }
+        if (e2 <= dx) {
+          er += dx;
+          y0 += sy;
+        }
+      }
+    }
+    function flood(x, y) {
+      const l = layers[active], im = l.ctx.getImageData(0, 0, S, S), d = im.data, f = hexRGBA($('color').value);
+      const i0 = (y * S + x) * 4, t = [d[i0], d[i0 + 1], d[i0 + 2], d[i0 + 3]];
+      if (t[0] === f[0] && t[1] === f[1] && t[2] === f[2] && t[3] === 255)
+        return;
+      const same = i => d[i] === t[0] && d[i + 1] === t[1] && d[i + 2] === t[2] && d[i + 3] === t[3];
+      const st = [[x, y]], R = regionAt(x, y);
+      while (st.length) {
+        const [px, py] = st.pop();
+        if (px < R[0] || py < R[1] || px >= R[0] + R[2] || py >= R[1] + R[3])
+          continue;
+        const i = (py * S + px) * 4;
+        if (!same(i))
+          continue;
+        d[i] = f[0];
+        d[i + 1] = f[1];
+        d[i + 2] = f[2];
+        d[i + 3] = 255;
+        st.push([px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]);
+      }
+      l.ctx.putImageData(im, 0, 0);
+    }
+    function setColor(h) { $('color').value = h; $('hex').textContent = h; syncPicker(h); }
+    function applyAt(p, first, last) {
+      if (tool === 'pick') {
+        const d = cctx.getImageData(p.x, p.y, 1, 1).data;
+        if (d[3])
+          setColor('#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join(''));
+        return;
+      }
+      if (!layers[active].visible) {
+        layers[active].visible = true;
+        renderLayers();
+      }
+      if (tool === 'fill') {
+        flood(p.x, p.y);
+      }
+      else if (first || !last)
+        dot(p.x, p.y);
+      else
+        line(last.x, last.y, p.x, p.y);
+      composite();
+      renderLayers(true);
+    }
+    /* 3D pointer */
+    let drag = null;
+    const dom = renderer.domElement;
+    dom.addEventListener('contextmenu', e => e.preventDefault());
+    dom.addEventListener('mousedown', e => { if (e.button === 1)
+      e.preventDefault(); });
+    dom.addEventListener('auxclick', e => e.preventDefault());
+    dom.addEventListener('pointerdown', e => {
+      dom.setPointerCapture(e.pointerId);
+      if (e.button === 1)
+        e.preventDefault();
+      busy = true;
+      const p = (e.button === 0 && tool !== 'orbit') ? pickPx(e) : null;
+      if (p) {
+        if (tool !== 'pick')
+          pushUndo();
+        drag = { paint: 1, last: p };
+        applyAt(p, true, null);
+        if (tool === 'fill' || tool === 'pick')
+          drag.once = 1;
+      }
+      else {
+        drag = { rot: e.button !== 1, pan: e.button === 1, x: e.clientX, y: e.clientY };
+        hideGrid();
+      }
+    });
+    dom.addEventListener('pointermove', e => {
+      if (!drag) {
+        hoverAt(e);
+        return;
+      }
+      if (drag.pan) {
+        const s = 2 * rad * Math.tan(cam.fov * Math.PI / 360) / view.clientHeight;
+        const rt = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 0), up = new THREE.Vector3().setFromMatrixColumn(cam.matrixWorld, 1);
+        tgt.addScaledVector(rt, -(e.clientX - drag.x) * s).addScaledVector(up, (e.clientY - drag.y) * s);
+        drag.x = e.clientX;
+        drag.y = e.clientY;
+        return;
+      }
+      if (drag.rot) {
+        theta -= (e.clientX - drag.x) * .01;
+        phi = Math.max(.15, Math.min(Math.PI - .15, phi - (e.clientY - drag.y) * .01));
+        drag.x = e.clientX;
+        drag.y = e.clientY;
+      }
+      else if (!drag.once) {
+        hoverAt(e);
+        const p = pickPx(e);
+        if (p) {
+          const same = drag.last && Math.abs(p.x - drag.last.x) < 4 && Math.abs(p.y - drag.last.y) < 4;
+          applyAt(p, false, same ? drag.last : null);
+          drag.last = p;
+        }
+      }
+    });
+    let hov = null, hovKey = '';
+    function hideGrid() { if (hov) {
+      hov.userData.g.visible = false;
+      hov = null;
+    } hovKey = ''; }
+    function hoverAt(e) {
+      if (!$('hgrid').checked || tool === 'orbit') {
+        hideGrid();
+        return;
+      }
+      const p = pickPx(e);
+      if (!p) {
+        hideGrid();
+        return;
+      }
+      const k = p.m.id + ':' + p.x + ':' + p.y;
+      if (k === hovKey)
+        return;
+      hovKey = k;
+      if (hov !== p.m) {
+        if (hov)
+          hov.userData.g.visible = false;
+        hov = p.m;
+        hov.userData.g.visible = true;
+      }
+      gridMat.uniforms.uHover.value.set(p.x, p.y);
+    }
+    dom.addEventListener('pointerleave', () => { if (!drag)
+      hideGrid(); });
+    const end = () => { drag = null; busy = false; };
+    dom.addEventListener('pointerup', end);
+    dom.addEventListener('pointercancel', end);
+    dom.addEventListener('wheel', e => { e.preventDefault(); tween = null; radT = Math.max(30, Math.min(160, radT * (1 + e.deltaY * .001))); }, { passive: false });
+    dom.addEventListener('pointerdown', () => { if (tween) { tween = null; radT = rad; } });
+
+    /* ---------- flat canvas ---------- */
+    const flat = $('flat'), fx = flat.getContext('2d');
+    function drawFlat() {
+      fx.clearRect(0, 0, 512, 512);
+      fx.imageSmoothingEnabled = false;
+      fx.drawImage(comp, 0, 0, 512, 512);
+      if ($('grid').checked) {
+        fx.strokeStyle = 'rgba(128,128,128,.3)';
+        fx.lineWidth = 1;
+        fx.beginPath();
+        for (let i = 0; i <= S; i++) {
+          fx.moveTo(i * 8 + .5, 0);
+          fx.lineTo(i * 8 + .5, 512);
+          fx.moveTo(0, i * 8 + .5);
+          fx.lineTo(512, i * 8 + .5);
+        }
+        fx.stroke();
+      }
+    }
+    function flatPx(e) {
+      const r = flat.getBoundingClientRect();
+      return { x: Math.max(0, Math.min(S - 1, Math.floor((e.clientX - r.left) / r.width * S))), y: Math.max(0, Math.min(S - 1, Math.floor((e.clientY - r.top) / r.height * S))) };
+    }
+    let fd = null;
+    flat.addEventListener('pointerdown', e => {
+      if (e.button !== 0)
+        return;
+      flat.setPointerCapture(e.pointerId);
+      const p = flatPx(e);
+      if (tool === 'orbit')
+        return;
+      if (tool !== 'pick')
+        pushUndo();
+      fd = { last: p };
+      applyAt(p, true, null);
+      if (tool === 'fill' || tool === 'pick')
+        fd.once = 1;
+    });
+    flat.addEventListener('pointermove', e => { if (!fd || fd.once)
+      return; const p = flatPx(e); applyAt(p, false, fd.last); fd.last = p; });
+    flat.addEventListener('pointerup', () => { fd = null; });
+    flat.addEventListener('pointercancel', () => { fd = null; });
+
+    /* ---------- layer UI ---------- */
+    function renderLayers(thumbsOnly) {
+      const box = $('layers');
+      if (thumbsOnly) {
+        box.querySelectorAll('canvas').forEach(c => { const l = layers[c.dataset.i]; const x = c.getContext('2d'); x.clearRect(0, 0, S, S); x.drawImage(l.canvas, 0, 0); });
+        return;
+      }
+      const before = new Map();
+      box.querySelectorAll('.layer').forEach(r => { if (r._l) before.set(r._l, r.getBoundingClientRect().top); });
+      box.innerHTML = '';
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const l = layers[i], row = document.createElement('div');
+        row.className = 'layer' + (i === active ? ' sel' : '');
+        row.dataset.i = i;
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = l.visible;
+        cb.title = 'Visible';
+        cb.onclick = e => { e.stopPropagation(); l.visible = cb.checked; composite(); };
+        const th = mk();
+        th.dataset.i = i;
+        th.getContext('2d').drawImage(l.canvas, 0, 0);
+        const nm = document.createElement('input');
+        nm.type = 'text';
+        nm.value = l.name;
+        nm.oninput = () => { l.name = nm.value; };
+        nm.onfocus = () => selectLayer(i);
+        nm.onclick = e => e.stopPropagation();
+        const grip = document.createElement('span');
+        grip.className = 'grip';
+        grip.textContent = '⋮⋮';
+        grip.title = 'Drag to reorder';
+        row.append(grip, cb, th, nm);
+        row.addEventListener('pointerdown', e => beginLayerDrag(e, i));
+        row.onclick = () => selectLayer(i);
+        row._l = l;
+        box.appendChild(row);
+      }
+      const rows = [...box.querySelectorAll('.layer')];
+      const added = before.size > 0 && layers.length === lastCount + 1 && rows.filter(r => !before.has(r._l)).length === 1;
+      lastCount = layers.length;
+      if (!RM) rows.forEach(r => {
+        if (before.has(r._l)) {
+          const d = before.get(r._l) - r.getBoundingClientRect().top;
+          if (d) r.animate([{ transform: 'translateY(' + d + 'px)' }, { transform: 'none' }], { duration: 300, easing: EASE });
+        }
+        else if (added)
+          r.animate([{ opacity: 0, transform: 'translateY(-8px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: EASE });
+      });
+    }
+    /* drag a layer row up or down to change its stacking order */
+    function beginLayerDrag(e, from) {
+      if (e.button !== 0 || e.target.closest('input')) return;
+      if (e.pointerType === 'touch' && !e.target.closest('.grip')) return;
+      const box = $('layers'), startY = e.clientY, n = layers.length, rowEl = e.currentTarget;
+      let dragging = false, slot = 0, line = null;
+      function slotAt(y) {
+        const rs = box.querySelectorAll('.layer');
+        for (let k = 0; k < rs.length; k++) {
+          const r = rs[k].getBoundingClientRect();
+          if (y < r.top + r.height / 2) return k;
+        }
+        return rs.length;
+      }
+      function onMove(ev) {
+        if (!dragging) {
+          if (Math.abs(ev.clientY - startY) < 5) return;
+          dragging = true;
+          rowEl.classList.add('dragging');
+          document.body.style.userSelect = 'none';
+          line = document.createElement('div');
+          line.className = 'dropline';
+          box.appendChild(line);
+        }
+        slot = slotAt(ev.clientY);
+        const rs = box.querySelectorAll('.layer'), last = rs[rs.length - 1];
+        const y = slot < rs.length ? rs[slot].offsetTop : last.offsetTop + last.offsetHeight;
+        line.style.top = (y - 2) + 'px';
+      }
+      function onUp() {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        document.body.style.userSelect = '';
+        if (!dragging) return;
+        rowEl.classList.remove('dragging');
+        if (line) line.remove();
+        const vFrom = n - 1 - from;                 /* row position, counted from the top of the list */
+        const vTo = slot > vFrom ? slot - 1 : slot;  /* position after the dragged row is removed */
+        const to = n - 1 - vTo;
+        if (to === from) return;
+        pushUndo();
+        const moved = layers.splice(from, 1)[0];
+        layers.splice(to, 0, moved);
+        active = to;
+        composite();
+        syncOp();
+        renderLayers();
+      }
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+      window.addEventListener('pointercancel', onUp);
+    }
+    function selectLayer(i) { active = i; syncOp(); $('layers').querySelectorAll('.layer').forEach(r => r.classList.toggle('sel', +r.dataset.i === i)); }
+    function syncOp() { const o = Math.round(layers[active].opacity * 100); $('op').value = o; $('opv').textContent = o; }
+    $('op').oninput = e => { layers[active].opacity = e.target.value / 100; $('opv').textContent = e.target.value; composite(); };
+    $('ladd').onclick = () => { pushUndo(); addLayer('Layer ' + (layers.length + 1)); active = layers.length - 1; syncOp(); renderLayers(); };
+    $('ldup').onclick = () => {
+      pushUndo();
+      const s = layers[active], n = addLayer(s.name + ' copy');
+      n.ctx.drawImage(s.canvas, 0, 0);
+      n.opacity = s.opacity;
+      layers.splice(active + 1, 0, layers.pop());
+      active++;
+      composite();
+      syncOp();
+      renderLayers();
+    };
+    $('ldel').onclick = () => { if (layers.length < 2)
+      return; pushUndo(); layers.splice(active, 1); active = Math.max(0, active - 1); composite(); syncOp(); renderLayers(); };
+    $('lup').onclick = () => { if (active >= layers.length - 1)
+      return; pushUndo(); [layers[active], layers[active + 1]] = [layers[active + 1], layers[active]]; active++; composite(); renderLayers(); };
+    $('ldn').onclick = () => { if (active < 1)
+      return; pushUndo(); [layers[active], layers[active - 1]] = [layers[active - 1], layers[active]]; active--; composite(); renderLayers(); };
+    $('lmerge').onclick = () => {
+      if (active < 1)
+        return;
+      const t = layers[active], b = layers[active - 1];
+      pushUndo();
+      if (t.visible) {
+        b.ctx.globalAlpha = t.opacity;
+        b.ctx.drawImage(t.canvas, 0, 0);
+      }
+      b.ctx.globalAlpha = 1;
+      layers.splice(active, 1);
+      active--;
+      composite();
+      syncOp();
+      renderLayers();
+    };
+
+    /* ---------- misc UI ---------- */
+    $('tools').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b)
+        return;
+      tool = b.dataset.t;
+      $('tools').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+      flat.style.cursor = tool === 'orbit' ? 'default' : 'crosshair';
+    });
+    $('color').oninput = e => { $('hex').textContent = e.target.value; };
+    $('size').oninput = e => { $('sizev').textContent = e.target.value; };
+    ['#c8946a', '#4a3020', '#2f9fb5', '#3b49a0', '#d23c3c', '#e8c33a', '#55a630', '#ffffff', '#888888', '#111111'].forEach(c => {
+      const b = document.createElement('button');
+      b.style.cssText = 'width:20px;height:20px;padding:0;background:' + c;
+      b.onclick = () => setColor(c);
+      $('sw').appendChild(b);
+    });
+    function updateVis() { const sh = $('shell').checked; for (const r of parts) {
+      r.a.visible = r.show;
+      r.b.visible = r.show && sh;
+    } }
+    $('shell').onchange = updateVis;
+    $('parts').addEventListener('change', e => { const c = e.target.closest('input'); if (!c)
+      return; parts.find(r => r.n === c.dataset.p).show = c.checked; hideGrid(); updateVis(); });
+    $('auto').onchange = e => { auto = e.target.checked; };
+    $('hgrid').onchange = e => { if (!e.target.checked)
+      hideGrid(); };
+    $('grid').onchange = drawFlat;
+    $('reset').onclick = () => {
+      if (RM) { theta = .55; phi = 1.3; rad = radT = 78; tgt.set(0, 16, 0); return; }
+      const TAU = Math.PI * 2;
+      let dth = (.55 - theta) % TAU;
+      if (dth > Math.PI) dth -= TAU;
+      if (dth < -Math.PI) dth += TAU;
+      tween = { t0: performance.now(), d: 700, th0: theta, dth, ph0: phi, r0: rad, tg0: tgt.clone() };
+      radT = 78;
+    };
+    $('models').addEventListener('click', e => { const b = e.target.closest('button'); if (!b)
+      return; setModel(b.dataset.m === 'slim'); $('models').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
+    (function () {
+      const root = document.documentElement, mq = matchMedia('(prefers-color-scheme:dark)');
+      let saved = null;
+      try {
+        saved = localStorage.getItem('skin-theme');
+      }
+      catch (e) { }
+      function apply(t) { root.dataset.theme = t; $('tl').classList.toggle('on', t === 'light'); $('td').classList.toggle('on', t === 'dark'); }
+      apply(saved || (mq.matches ? 'dark' : 'light'));
+      requestAnimationFrame(() => requestAnimationFrame(() => root.classList.add('ready')));
+      const set = t => { saved = t; apply(t); try {
+        localStorage.setItem('skin-theme', t);
+      }
+      catch (e) { } };
+      $('tl').onclick = () => set('light');
+      $('td').onclick = () => set('dark');
+      if (mq.addEventListener)
+        mq.addEventListener('change', e => { if (!saved)
+          apply(e.matches ? 'dark' : 'light'); });
+    })();
+    $('undo').onclick = undo;
+    $('redo').onclick = redo;
+    addEventListener('keydown', e => {
+      if (!(e.ctrlKey || e.metaKey))
+        return;
+      const t = e.target;
+      if (t && t.tagName === 'INPUT' && t.type === 'text')
+        return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+        e.preventDefault();
+        redo();
+      }
+    });
+    function importSkin(c, img) {
+      const s = img.width / S;
+      c.imageSmoothingEnabled = false;
+      c.drawImage(img, 0, 0, img.width, img.height, 0, 0, S, img.height / s);
+      if (img.height * 2 <= img.width) { /* legacy 64x32 skin: build the left arm and leg by mirroring the right ones */
+        const cv = c.canvas;
+        const m = (sx, sy, dx, dy, rw, rh) => { c.save(); c.translate(dx + rw, dy); c.scale(-1, 1); c.drawImage(cv, sx, sy, rw, rh, 0, 0, rw, rh); c.restore(); };
+        const mir = (su, sv, du, dv, w, h, d) => {
+          m(su + d, sv, du + d, dv, w, d);
+          m(su + d + w, sv, du + d + w, dv, w, d);
+          m(su + d, sv + d, du + d, dv + d, w, h);
+          m(su + 2 * d + w, sv + d, du + 2 * d + w, dv + d, w, h);
+          m(su, sv + d, du + d + w, dv + d, d, h);
+          m(su + d + w, sv + d, du, dv + d, d, h);
+        };
+        mir(0, 16, 16, 48, 4, 12, 4);
+        mir(40, 16, 32, 48, 4, 12, 4);
+      }
+    }
+    $('imp').onclick = () => $('file').click();
+    $('file').onchange = e => {
+      const f = e.target.files[0];
+      if (!f)
+        return;
+      const img = new Image();
+      img.onload = () => { pushUndo(); const l = addLayer(f.name.replace(/\.png$/i, '').slice(0, 20) || 'Imported'); importSkin(l.ctx, img); URL.revokeObjectURL(img.src); active = layers.length - 1; composite(); syncOp(); renderLayers(); };
+      img.src = URL.createObjectURL(f);
+      e.target.value = '';
+    };
+    $('exp').onclick = () => { $('out').src = comp.toDataURL('image/png'); $('modal').classList.add('show'); };
+    const closeM = () => $('modal').classList.remove('show');
+    $('close').onclick = closeM;
+    $('modal').addEventListener('click', e => { if (e.target === $('modal'))
+      closeM(); });
+    addEventListener('keydown', e => { if (e.key === 'Escape')
+      closeM(); });
+
+    /* ---------- custom colour picker ---------- */
+    const pop = $('cpop'), csv = $('csv'), cx = csv.getContext('2d'), cdot = $('cdot'), chue = $('chue'), chex = $('chex'), cbtn = $('cbtn'), cwrap = $('csvwrap');
+    let hh = 0, ss = 1, vv = 1, svDrag = false;
+    function hsv2hex(h, s, v) {
+      const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+      return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+    }
+    function hex2hsv(hex) {
+      const [r, g, b] = hexRGBA(hex).slice(0, 3).map(x => x / 255), mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+      let h = 0;
+      if (d) h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return [h * 60, mx ? d / mx : 0, mx];
+    }
+    function paintPicker() {
+      const hex = hsv2hex(hh, ss, vv);
+      cx.fillStyle = hsv2hex(hh, 1, 1);
+      cx.fillRect(0, 0, 200, 140);
+      let g = cx.createLinearGradient(0, 0, 200, 0);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      cx.fillStyle = g;
+      cx.fillRect(0, 0, 200, 140);
+      g = cx.createLinearGradient(0, 0, 0, 140);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,1)');
+      cx.fillStyle = g;
+      cx.fillRect(0, 0, 200, 140);
+      cdot.style.left = ss * 100 + '%';
+      cdot.style.top = (1 - vv) * 100 + '%';
+      chue.value = hh;
+      cbtn.style.background = $('cprev').style.background = hex;
+      if (document.activeElement !== chex) chex.value = hex;
+      return hex;
+    }
+    function commit() { const hex = paintPicker(); $('color').value = hex; $('hex').textContent = hex; }
+    function syncPicker(hex) {
+      const [h, s, v] = hex2hsv(hex);
+      if (s > 0 && v > 0) hh = h;
+      ss = s;
+      vv = v;
+      paintPicker();
+    }
+    function svMove(e) {
+      const r = csv.getBoundingClientRect();
+      ss = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      vv = 1 - Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      commit();
+    }
+    cwrap.addEventListener('pointerdown', e => { svDrag = true; cwrap.setPointerCapture(e.pointerId); svMove(e); });
+    cwrap.addEventListener('pointermove', e => { if (svDrag) svMove(e); });
+    cwrap.addEventListener('pointerup', () => { svDrag = false; });
+    cwrap.addEventListener('pointercancel', () => { svDrag = false; });
+    chue.oninput = () => { hh = +chue.value; commit(); };
+    chex.oninput = () => { if (/^#[0-9a-f]{6}$/i.test(chex.value)) setColor(chex.value.toLowerCase()); };
+    chex.onblur = () => { chex.value = $('color').value; };
+    function openPop() {
+      const r = cbtn.getBoundingClientRect(), left = Math.max(8, Math.min(innerWidth - 224 - 8, r.left));
+      pop.style.left = left + 'px';
+      pop.style.top = Math.max(8, Math.min(r.bottom + 10, innerHeight - pop.offsetHeight - 8)) + 'px';
+      pop.style.transformOrigin = (r.left + r.width / 2 - left) + 'px -10px';
+      pop.classList.add('show');
+    }
+    function closePop() { pop.classList.remove('show'); }
+    cbtn.onclick = () => pop.classList.contains('show') ? closePop() : openPop();
+    document.addEventListener('pointerdown', e => { if (pop.classList.contains('show') && !pop.contains(e.target) && !cbtn.contains(e.target)) closePop(); });
+    addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+    addEventListener('resize', closePop);
+    addEventListener('scroll', closePop, true);
+    syncPicker($('color').value);
+
+    /* ---------- init ---------- */
+    seed(addLayer('Base').ctx);
+    addLayer('Details');
+    active = 1;
+    syncOp();
+    renderLayers();
+    resize();
+    composite();
+  })();
+</script>
+</body>
+</html>
